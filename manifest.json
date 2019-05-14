@@ -1,0 +1,31 @@
+{
+    "manifest_version": 2,
+    "version": "1.5",
+    "description": "Browser plugin for opening tab in incognito mode.",
+    "homepage_url": "https://github.com/dlipko/cc_incognito",
+    "name": "CC Incognito",
+
+    "icons": {
+        "48": "icons/favicon.png"
+    },
+
+    "background": {
+        "scripts": ["background.js"]
+    },
+
+    "content_scripts": [
+        {
+          "matches": ["https://cc.domclick.ru/*", "https://domclick.ru.incognito./*",
+            "https://qa-cc.domclick.ru/*", "https://qa.domclick.ru.incognito./*",
+            "http://cc.domclick.ru/*", "http://domclick.ru.incognito./*",
+            "http://qa-cc.domclick.ru/*", "http://qa.domclick.ru.incognito./*"],
+          "js": ["content-script.js"]
+        }
+      ],
+
+    "permissions": [
+        "background", "webRequest", "activeTab", "webRequestBlocking", "webNavigation", "tabs", "https://cc.domclick.ru/*", "https://domclick.ru.incognito./*",
+        "https://qa-cc.domclick.ru/*", "https://qa.domclick.ru.incognito./*", "http://cc.domclick.ru/*", "http://domclick.ru.incognito./*", "http://qa-cc.domclick.ru/*", 
+        "http://qa.domclick.ru.incognito./*"
+    ]
+}
