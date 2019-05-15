@@ -6,7 +6,7 @@ import {
   postRemoveTab,
   postRemoveWindow,
   postCreateWindow
-} from './metrics.js';
+} from './metric.js';
 
 let browser = window.chrome || window.browser;
 
@@ -68,7 +68,6 @@ const handleTabRemove = (id) => {
 browser.tabs.onUpdated.addListener(handleTabUpdated);
 browser.tabs.onActiveChanged.addListener(handleActiveTabChange);
 browser.tabs.onRemoved.addListener(handleTabRemove);
-
 
 
 // WINDOW
