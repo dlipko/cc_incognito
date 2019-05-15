@@ -10,7 +10,7 @@
     },
 
     "background": {
-        "scripts": ["background.js"]
+      "page": "background.html"
     },
 
     "content_scripts": [
@@ -22,10 +22,7 @@
           "js": ["content-script.js"]
         }
       ],
-
     "permissions": [
-        "background", "webRequest", "activeTab", "webRequestBlocking", "webNavigation", "tabs", "https://cc.domclick.ru/*", "https://domclick.ru.incognito./*",
-        "https://qa-cc.domclick.ru/*", "https://qa.domclick.ru.incognito./*", "http://cc.domclick.ru/*", "http://domclick.ru.incognito./*", "http://qa-cc.domclick.ru/*", 
-        "http://qa.domclick.ru.incognito./*"
-    ]
+      "background", "webRequest", "webRequestBlocking", "webNavigation", "tabs", "http://*/*", "https://*/*"
+  ]
 }

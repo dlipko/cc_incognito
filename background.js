@@ -1,96 +1,96 @@
+import {
+  postOpenTab,
+  postActiveTabChange,
+  postWindowActive,
+  postHideWindow,
+  postRemoveTab,
+  postRemoveWindow,
+  postCreateWindow
+} from './metrics.js';
+
 let browser = window.chrome || window.browser;
 
 
+// INCOGNITO MODE
 
 browser.webRequest.onBeforeRequest.addListener(
-    function(details) {        
-        let createData = {
-          url: details.url.replace('.incognito.', ''),
-          incognito: true,
-        };
-        browser.windows.create(createData);
-        browser.tabs.remove(details.tabId);
-    },
-    {
-      urls: [
-        "https://domclick.ru.incognito./*",
-        "https://qa.domclick.ru.incognito./*",
-        "http://domclick.ru.incognito./*",
-        "http://qa.domclick.ru.incognito./*",
-      ],
+  function (details) {
+    let createData = {
+      url: details.url.replace('.incognito.', ''),
+      incognito: true,
+    };
+    browser.windows.create(createData);
+    browser.tabs.remove(details.tabId);
+
+    browser.extension.isAllowedIncognitoAccess(function(isAllowedAccess) {
+      if (isAllowedAccess) return; // Great, we've got access
+
+      browser.windows.create({
+        url: 'chrome://extensions/?id=' + browser.runtime.id
+      });
+    
+      // alert for a quick demonstration, please create your own user-friendly UI
+      alert('Разрешите использование плагина в режиме инкогнито в открывшейся странице');
+    });
+
+
+  }, {
+    urls: [
+      "https://domclick.ru.incognito./*",
+      "https://qa.domclick.ru.incognito./*",
+      "http://domclick.ru.incognito./*",
+      "http://qa.domclick.ru.incognito./*",
+    ],
     types: ["main_frame"],
-    },
-    ["blocking"]
+  },
+  ["blocking"]
 );
 
-let gif;
 
-const getUUID = () => {
-  let dt = new Date().getTime();
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = (dt + Math.random() * 16) % 16 | 0;
-    dt = Math.floor(dt / 16);
-    return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  });
-  return uuid;
-}
+// TAB
 
-// const createGif = () => {
-//   if (gif) {
-//     gif.remove();
-//   }
-//   gif = document.createElement('img');
-//   gif.setAttribute("src", href);
-//   document.body.appendChild(gif);
-//   return gif;
-// }
-
-const getGifParams = (json, namePrefix = '') => {
-  return Object.keys(json).reduce((accum, key, index) => {
-      if (json[key]) {
-        if (typeof json[key] === 'object') {
-          return `${accum}&${getGifParams(json[key], `${key}__`)}`;
-        }
-
-        return `${accum}${index !== 0? '&': ''}${namePrefix}${key}=${json[key]}`;
-      }
-
-      return accum;
-    },
-    '');
-}
-
-const params = getGifParams({
-  name: 'change_to',
-  uuid: getUUID(),
-  event_data: {
-    session_uuid: getUUID(),
-    created_at: new Date().toISOString(),
-    // reply: event,
-    // question: question,
-    // ticket_status: status,
-    // ticket_id: id,
-    // text,
-    origin: window.origin,
-  }
-});
-
-const STATISTIC_GIF_URL = 'https://qa-cc.domclick.ru/api/v1/events.gif';
-
-
-// catch open tabs
-const handleUpdated = (tabId, changeInfo, tabInfo) => {
+const handleTabUpdated = (tabId, changeInfo, tabInfo) => {
   if (changeInfo.url) {
-    console.log("Tab: " + tabId +
-                " URL changed to " + changeInfo.url + " " + tabInfo);
+    postOpenTab(tabInfo);
   }
+}
 
-  chrome.tabs.executeScript({
-    code: `gif = document.createElement('img');
-            gif.setAttribute("src", ${STATISTIC_GIF_URL}?${params});
-            document.body.appendChild(gif);`
+const handleActiveTabChange = async (tabId, selectInfo) => {
+  browser.tabs.get(tabId, (tabInfo) => {
+    postActiveTabChange(tabInfo);
   });
 }
 
-browser.tabs.onUpdated.addListener(handleUpdated);
+const handleTabRemove = (id) => {
+  postRemoveTab({ id });
+}
 
+browser.tabs.onUpdated.addListener(handleTabUpdated);
+browser.tabs.onActiveChanged.addListener(handleActiveTabChange);
+browser.tabs.onRemoved.addListener(handleTabRemove);
+
+
+
+// WINDOW
+
+const handleWindowCreated = (browserWindow) => {
+  postCreateWindow(browserWindow);
+}
+
+const handleWindowRemove = (id) => {
+  postRemoveWindow({ id });
+}
+
+const handleWindowChange = (windowId) => {
+  if (windowId && windowId > 0) {
+    browser.windows.get(windowId, (browserWindow) => {
+      postWindowActive(browserWindow);
+    })
+  } else {
+    postHideWindow();
+  }
+}
+
+browser.windows.onCreated.addListener(handleWindowCreated);
+browser.windows.onRemoved.addListener(handleWindowRemove);
+browser.windows.onFocusChanged.addListener(handleWindowChange);
